@@ -2,13 +2,30 @@ package com.learn.sql_ai_generator.dto;
 
 public class ChatResponse {
 
-    private String response;
+    private String sql;
+    private String message;
 
-    public ChatResponse(String response) {
-        this.response = response;
+    public ChatResponse() {
     }
 
-    public String getResponse() {
-        return response;
+    public ChatResponse(String sql, String message) {
+        this.sql = sql;
+        this.message = message;
+    }
+
+    public String getSql() {
+        return sql;
+    }
+
+    public void setSql(String sql) {
+        this.sql = sql;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 }

@@ -2,13 +2,13 @@ package com.learn.sql_ai_generator.dto;
 
 public class ChatRequest {
 
-    private String message;
+    private String prompt;
 
-    public String getMessage() {
-        return message;
+    public String getPrompt() {
+        return prompt;
     }
 
-    public void setMessage(String message) {
-        this.message = message;
+    public void setPrompt(String prompt) {
+        this.prompt = prompt;
     }
 }

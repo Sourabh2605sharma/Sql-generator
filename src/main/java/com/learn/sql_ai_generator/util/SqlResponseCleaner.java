@@ -1,4 +1,4 @@
-package com.learn.util;
+package com.learn.sql_ai_generator.util;
 
 public class SqlResponseCleaner {
 

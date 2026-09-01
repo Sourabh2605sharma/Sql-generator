@@ -1,8 +1,7 @@
 package com.learn.sql_ai_generator.controller;
 
-
+import com.learn.sql_ai_generator.dto.ChatResponse;
 import com.learn.sql_ai_generator.service.AIService;
-import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -16,11 +15,11 @@ public class AIController {
     }
 
     @PostMapping(
-            value = "/chat",
-            consumes = MediaType.TEXT_PLAIN_VALUE,
-            produces = MediaType.TEXT_PLAIN_VALUE)
-    public String chat(@RequestBody String message) {
-
-        return aiService.chat(message);
+            value = "/generate",
+            consumes = "text/plain",
+            produces = "application/json"
+    )
+    public ChatResponse generateSql(@RequestBody String prompt) {
+        return aiService.chat(prompt);
     }
 }
