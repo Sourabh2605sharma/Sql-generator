@@ -29,21 +29,21 @@ public class AIService {
          * ---------------------------------------------------------
          * STEP 1: Validate user input
          * ---------------------------------------------------------
-         */
-
-        if (userPrompt == null || userPrompt.isBlank()) {
-
-            return new ChatResponse(
-                    null,
-                    "Please provide a request for a SELECT query."
-            );
-        }
-
-
-        /*
-         * ---------------------------------------------------------
-         * STEP 2: Validate that the request is SELECT-related
-         * ---------------------------------------------------------
+         *
+         * We do not allow requests asking for:
+         *
+         * INSERT
+         * UPDATE
+         * DELETE
+         * DROP
+         * TRUNCATE
+         * ALTER
+         * CREATE
+         * GRANT
+         * REVOKE
+         * MERGE
+         *
+         * Such requests are rejected before calling the LLM.
          */
 
         if (!UserPromptValidator.isSelectRequest(userPrompt)) {
@@ -58,6 +58,19 @@ public class AIService {
         }
 
 
+        /*
+         * ---------------------------------------------------------
+         * STEP 2: Validate empty request
+         * ---------------------------------------------------------
+         */
+
+        if (userPrompt == null || userPrompt.isBlank()) {
+
+            return new ChatResponse(
+                    null,
+                    "Please provide a request for a SELECT query."
+            );
+        }
         /*
          * ---------------------------------------------------------
          * STEP 3: SAVE USER PROMPT TO DATABASE
