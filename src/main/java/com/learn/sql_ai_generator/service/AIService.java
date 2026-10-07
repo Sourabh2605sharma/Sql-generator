@@ -1,19 +1,26 @@
 package com.learn.sql_ai_generator.service;
 
 import com.learn.sql_ai_generator.dto.ChatResponse;
+import com.learn.sql_ai_generator.entity.Prompt;
+import com.learn.sql_ai_generator.repository.PromptRepository;
 import com.learn.sql_ai_generator.util.SqlQueryValidator;
 import com.learn.sql_ai_generator.util.SqlResponseCleaner;
 import com.learn.sql_ai_generator.util.UserPromptValidator;
 import dev.langchain4j.model.chat.ChatModel;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+
 @Service
 public class AIService {
 
     private final ChatModel chatModel;
+    private final PromptRepository promptRepository;
 
-    public AIService(ChatModel chatModel) {
+    public AIService(ChatModel chatModel,
+                     PromptRepository promptRepository) {
         this.chatModel = chatModel;
+        this.promptRepository = promptRepository;
     }
 
     public ChatResponse chat(String userPrompt) {
@@ -22,21 +29,21 @@ public class AIService {
          * ---------------------------------------------------------
          * STEP 1: Validate user input
          * ---------------------------------------------------------
-         *
-         * We do not allow requests asking for:
-         *
-         * INSERT
-         * UPDATE
-         * DELETE
-         * DROP
-         * TRUNCATE
-         * ALTER
-         * CREATE
-         * GRANT
-         * REVOKE
-         * MERGE
-         *
-         * Such requests are rejected before calling the LLM.
+         */
+
+        if (userPrompt == null || userPrompt.isBlank()) {
+
+            return new ChatResponse(
+                    null,
+                    "Please provide a request for a SELECT query."
+            );
+        }
+
+
+        /*
+         * ---------------------------------------------------------
+         * STEP 2: Validate that the request is SELECT-related
+         * ---------------------------------------------------------
          */
 
         if (!UserPromptValidator.isSelectRequest(userPrompt)) {
@@ -53,31 +60,24 @@ public class AIService {
 
         /*
          * ---------------------------------------------------------
-         * STEP 2: Validate empty request
+         * STEP 3: SAVE USER PROMPT TO DATABASE
          * ---------------------------------------------------------
+         *
+         * Only valid SELECT-related requests are stored.
          */
 
-        if (userPrompt == null || userPrompt.isBlank()) {
+        Prompt prompt = new Prompt();
 
-            return new ChatResponse(
-                    null,
-                    "Please provide a request for a SELECT query."
-            );
-        }
+        prompt.setPrompt(userPrompt);
+        prompt.setInsertDateTime(LocalDateTime.now());
+
+        promptRepository.save(prompt);
 
 
         /*
          * ---------------------------------------------------------
-         * STEP 3: Build our INTERNAL prompt
+         * STEP 4: Build our INTERNAL AI prompt
          * ---------------------------------------------------------
-         *
-         * The API user does NOT need to provide this prompt.
-         *
-         * The user only sends something like:
-         *
-         * "show all employees"
-         *
-         * Our application adds these instructions automatically.
          */
 
         String message = """
@@ -132,7 +132,7 @@ public class AIService {
 
         /*
          * ---------------------------------------------------------
-         * STEP 4: Call LangChain4j / OpenRouter / Qwen
+         * STEP 5: Call LangChain4j / OpenRouter / Qwen
          * ---------------------------------------------------------
          */
 
@@ -154,10 +154,8 @@ public class AIService {
 
         /*
          * ---------------------------------------------------------
-         * STEP 5: Clean the AI response
+         * STEP 6: Clean AI response
          * ---------------------------------------------------------
-         *
-         * Your existing SqlResponseCleaner is kept here.
          */
 
         sql = SqlResponseCleaner.clean(sql);
@@ -165,12 +163,7 @@ public class AIService {
 
         /*
          * ---------------------------------------------------------
-         * STEP 6: VERY IMPORTANT
-         *
-         * Validate the AI-generated SQL.
-         *
-         * Even though we told Qwen to generate SELECT only,
-         * we NEVER blindly trust the LLM response.
+         * STEP 7: Validate AI-generated SQL
          * ---------------------------------------------------------
          */
 
@@ -190,7 +183,7 @@ public class AIService {
 
         /*
          * ---------------------------------------------------------
-         * STEP 7: Return successful response
+         * STEP 8: Return successful response
          * ---------------------------------------------------------
          */
 
